@@ -4,6 +4,7 @@ import { getDistanceFromLatLonInMi } from "../util/helpers";
 
 const Timer = () => {
   const [time, setTime] = React.useState(0);
+  const [tracker, setTracker] = React.useState(0);
   const [timer, setTimer] = React.useState<number>();
   const [tracks, setTracks] = React.useState<GeolocationPosition[]>([]);
   const [distance, setDistance] = React.useState(0);
@@ -14,30 +15,35 @@ const Timer = () => {
       undefined,
       { enableHighAccuracy: true }
     );
-    const id = window.setInterval(
+    const timerId = window.setInterval(
+      () => setTime((time) => time + 1000),
+      1000
+    );
+    setTimer(timerId);
+    const trackerId = window.setInterval(
       () =>
         navigator.geolocation.getCurrentPosition(
-          (loc) => tick(loc),
+          (loc) => addStep(loc),
           undefined,
           { enableHighAccuracy: true }
         ),
-      1000
+      5000
     );
-    setTimer(id);
+    setTracker(trackerId);
   };
-
   const stop = () => {
     window.clearInterval(timer);
+    window.clearInterval(tracker);
   };
 
   const reset = () => {
     setTime(0);
     setDistance(0);
     setTracks([]);
+    setTracker(0);
   };
 
-  const tick = (loc: GeolocationPosition) => {
-    setTime((time) => time + 1000);
+  const addStep = (loc: GeolocationPosition) => {
     const journey = tracks;
     journey.push(loc);
     setTracks(journey);
