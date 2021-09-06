@@ -9,6 +9,11 @@ const Timer = () => {
   const [distance, setDistance] = React.useState(0);
 
   const start = () => {
+    navigator.geolocation.getCurrentPosition(
+      (loc) => setTracks([loc]),
+      undefined,
+      { enableHighAccuracy: true }
+    );
     const id = window.setInterval(
       () =>
         navigator.geolocation.getCurrentPosition(
@@ -19,11 +24,6 @@ const Timer = () => {
       1000
     );
     setTimer(id);
-    navigator.geolocation.getCurrentPosition(
-      (loc) => setTracks([loc]),
-      undefined,
-      { enableHighAccuracy: true }
-    );
   };
 
   const stop = () => {
@@ -62,8 +62,8 @@ const Timer = () => {
         <Text>Total Distance: {distance} mi</Text>
       </HStack>
       <VStack>
-        {tracks.slice(tracks.length - 3).map((track) => (
-          <Text>
+        {tracks.slice(tracks.length - 10).map((track) => (
+          <Text key={(Math.random() + track.coords.longitude).toString()}>
             Step: {track.coords.latitude} {track.coords.longitude}
             {getDistanceFromLatLonInMi(
               tracks[tracks.length - 1].coords.latitude,
