@@ -35,8 +35,8 @@ const Timer = () => {
   };
 
   const addStep = (loc: GeolocationPosition) => {
+    if (tracks[tracks.length - 1] === loc) return;
     const journey = tracks;
-    console.log(tracks);
     journey.push(loc);
     setTracks(journey);
     const totalDistance =
