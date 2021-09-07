@@ -10,30 +10,21 @@ const Timer = () => {
   const [distance, setDistance] = React.useState(0);
 
   const start = () => {
-    navigator.geolocation.getCurrentPosition(
-      (loc) => setTracks([loc]),
+    const trackerId = navigator.geolocation.watchPosition(
+      (loc) => addStep(loc),
       undefined,
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 5000 }
     );
     const timerId = window.setInterval(
       () => setTime((time) => time + 1000),
       1000
     );
     setTimer(timerId);
-    const trackerId = window.setInterval(
-      () =>
-        navigator.geolocation.getCurrentPosition(
-          (loc) => addStep(loc),
-          undefined,
-          { enableHighAccuracy: true }
-        ),
-      5000
-    );
     setTracker(trackerId);
   };
   const stop = () => {
     window.clearInterval(timer);
-    window.clearInterval(tracker);
+    navigator.geolocation.clearWatch(tracker);
   };
 
   const reset = () => {
@@ -45,6 +36,7 @@ const Timer = () => {
 
   const addStep = (loc: GeolocationPosition) => {
     const journey = tracks;
+    console.log(tracks);
     journey.push(loc);
     setTracks(journey);
     const totalDistance =
