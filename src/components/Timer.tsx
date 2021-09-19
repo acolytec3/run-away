@@ -44,6 +44,7 @@ const Timer = () => {
     if (tracks[tracks.length - 1] === loc) return;
     const journey = tracks;
     journey.push(loc);
+    setTracks(journey);
     const step = journey.length - 1;
     if (step > 0) {
       const localDistance = ruler.distance(
