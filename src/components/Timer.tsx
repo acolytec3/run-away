@@ -1,6 +1,8 @@
 import React from "react";
-import { Button, HStack, Text, VStack } from "@chakra-ui/react";
-import { getDistanceFromLatLonInMi } from "../util/helpers";
+import { Button, HStack, Text } from "@chakra-ui/react";
+import CheapRuler from "cheap-ruler";
+
+let ruler: CheapRuler;
 
 const Timer = () => {
   const [time, setTime] = React.useState(0);
@@ -10,6 +12,10 @@ const Timer = () => {
   const [distance, setDistance] = React.useState(0);
 
   const start = () => {
+    navigator.geolocation.getCurrentPosition((loc) => {
+      setTracks([loc]);
+      ruler = new CheapRuler(loc.coords.latitude, "miles");
+    });
     const trackerId = navigator.geolocation.watchPosition(
       (loc) => addStep(loc),
       undefined,
@@ -29,25 +35,43 @@ const Timer = () => {
 
   const reset = () => {
     setTime(0);
-    setDistance(0);
     setTracks([]);
     setTracker(0);
+    setDistance(0);
   };
 
   const addStep = (loc: GeolocationPosition) => {
     if (tracks[tracks.length - 1] === loc) return;
     const journey = tracks;
     journey.push(loc);
-    setTracks(journey);
-    const totalDistance =
-      distance +
-      getDistanceFromLatLonInMi(
-        tracks[tracks.length - 1].coords.latitude,
-        tracks[tracks.length - 1].coords.longitude,
-        loc.coords.latitude,
-        loc.coords.longitude
+    const step = journey.length - 1;
+    if (step > 0) {
+      const localDistance = ruler.distance(
+        [journey[step - 1].coords.latitude, journey[step - 1].coords.longitude],
+        [journey[step].coords.latitude, journey[step].coords.longitude]
       );
-    setDistance(totalDistance);
+      setDistance(distance + localDistance);
+    }
+  };
+
+  const saveRoute = async () => {
+    const tracksObject = tracks.map((step) =>
+      Object.assign({
+        lat: step.coords.latitude,
+        lon: step.coords.longitude,
+        timestamp: step.timestamp,
+      })
+    );
+    const route = new Blob([JSON.stringify(tracksObject, null, 2)], {
+      type: "application/json",
+    });
+    const href = await URL.createObjectURL(route);
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = `route.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -55,23 +79,17 @@ const Timer = () => {
       <HStack>
         <Button onClick={start}>Start</Button>
         <Button onClick={stop}>Stop</Button>
-        <Button onClick={reset}>Reset</Button>
-        <Text>Elapsed Time: {time / 1000} seconds</Text>
-        <Text>Total Distance: {distance} mi</Text>
+        <Button isDisabled={time === 0} onClick={reset}>
+          Reset
+        </Button>
       </HStack>
-      <VStack>
-        {tracks.slice(tracks.length - 10).map((track) => (
-          <Text key={(Math.random() + track.coords.longitude).toString()}>
-            Step: {track.coords.latitude} {track.coords.longitude}
-            {getDistanceFromLatLonInMi(
-              tracks[tracks.length - 1].coords.latitude,
-              tracks[tracks.length - 1].coords.longitude,
-              track.coords.latitude,
-              track.coords.longitude
-            )}
-          </Text>
-        ))}
-      </VStack>
+      <Text>Elapsed Time: {time / 1000} seconds</Text>
+      <Text>Total Distance: {distance} miles</Text>
+      <HStack>
+        <Button isDisabled={tracks.length === 0} onClick={saveRoute}>
+          Save Route
+        </Button>
+      </HStack>
     </>
   );
 };
