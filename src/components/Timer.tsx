@@ -51,7 +51,8 @@ const Timer = () => {
         [journey[step - 1].coords.latitude, journey[step - 1].coords.longitude],
         [journey[step].coords.latitude, journey[step].coords.longitude]
       );
-      setDistance(distance + localDistance);
+      const totalDistance = distance + localDistance
+      setDistance(totalDistance);
     }
   };
 
