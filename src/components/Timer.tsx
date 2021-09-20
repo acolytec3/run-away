@@ -1,14 +1,10 @@
 import React from "react";
 import { Button, HStack, Text } from "@chakra-ui/react";
 import CheapRuler from "cheap-ruler";
+import GlobalContext, { Step } from "../context/globalContext";
 
 let ruler: CheapRuler;
 
-export type Step = {
-  lat: number;
-  lon: number;
-  timestamp: number;
-};
 const Timer = () => {
   const [time, setTime] = React.useState(0);
   const [tracker, setTracker] = React.useState(0);
@@ -16,6 +12,7 @@ const Timer = () => {
   const [tracks, setTracks] = React.useState<Step[]>([]);
   const [distance, setDistance] = React.useState(0);
 
+  const { dispatch } = React.useContext(GlobalContext);
   const start = () => {
     navigator.geolocation.getCurrentPosition((loc) => {
       setTracks([
@@ -48,6 +45,7 @@ const Timer = () => {
   const stop = () => {
     window.clearInterval(timer);
     navigator.geolocation.clearWatch(tracker);
+    dispatch({ type: "SAVE_TRACKS", payload: tracks });
   };
 
   const reset = () => {
@@ -73,7 +71,7 @@ const Timer = () => {
     }
   };
 
-  const saveRoute = async () => {
+  const downloadRoute = async () => {
     const route = new Blob([JSON.stringify(tracks, null, 2)], {
       type: "application/json",
     });
@@ -98,8 +96,8 @@ const Timer = () => {
       <Text>Elapsed Time: {time / 1000} seconds</Text>
       <Text>Total Distance: {distance} miles</Text>
       <HStack>
-        <Button isDisabled={tracks.length === 0} onClick={saveRoute}>
-          Save Route
+        <Button isDisabled={tracks.length === 0} onClick={downloadRoute}>
+          Download Route
         </Button>
       </HStack>
     </>
