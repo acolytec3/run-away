@@ -4,6 +4,7 @@ import { ColorModeSwitcher } from "./ColorModeSwitcher";
 
 import Timer from "./components/Timer";
 
+
 export const App = () => {
   return (
     <ChakraProvider theme={theme}>

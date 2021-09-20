@@ -1,23 +1,41 @@
 import React from "react";
 import { Button, HStack, Text } from "@chakra-ui/react";
 import CheapRuler from "cheap-ruler";
+import MapComponent from "./MapComponent";
 
 let ruler: CheapRuler;
 
+export type Step = {
+  lat: number;
+  lon: number;
+  timestamp: number;
+};
 const Timer = () => {
   const [time, setTime] = React.useState(0);
   const [tracker, setTracker] = React.useState(0);
   const [timer, setTimer] = React.useState<number>();
-  const [tracks, setTracks] = React.useState<GeolocationPosition[]>([]);
+  const [tracks, setTracks] = React.useState<Step[]>([]);
   const [distance, setDistance] = React.useState(0);
 
   const start = () => {
     navigator.geolocation.getCurrentPosition((loc) => {
-      setTracks([loc]);
+      setTracks([
+        {
+          lat: loc.coords.latitude,
+          lon: loc.coords.longitude,
+          timestamp: loc.timestamp,
+        },
+      ]);
       ruler = new CheapRuler(loc.coords.latitude, "miles");
     });
     const trackerId = navigator.geolocation.watchPosition(
-      (loc) => addStep(loc),
+      (loc) => {
+        addStep({
+          lat: loc.coords.latitude,
+          lon: loc.coords.longitude,
+          timestamp: loc.timestamp,
+        });
+      },
       undefined,
       { enableHighAccuracy: true, maximumAge: 30000, timeout: 5000 }
     );
@@ -40,7 +58,7 @@ const Timer = () => {
     setDistance(0);
   };
 
-  const addStep = (loc: GeolocationPosition) => {
+  const addStep = (loc: Step) => {
     if (tracks[tracks.length - 1] === loc) return;
     const journey = tracks;
     journey.push(loc);
@@ -48,23 +66,16 @@ const Timer = () => {
     const step = journey.length - 1;
     if (step > 0) {
       const localDistance = ruler.distance(
-        [journey[step - 1].coords.latitude, journey[step - 1].coords.longitude],
-        [journey[step].coords.latitude, journey[step].coords.longitude]
+        [journey[step - 1].lat, journey[step - 1].lon],
+        [journey[step].lat, journey[step].lon]
       );
-      const totalDistance = distance + localDistance
+      const totalDistance = distance + localDistance;
       setDistance(totalDistance);
     }
   };
 
   const saveRoute = async () => {
-    const tracksObject = tracks.map((step) =>
-      Object.assign({
-        lat: step.coords.latitude,
-        lon: step.coords.longitude,
-        timestamp: step.timestamp,
-      })
-    );
-    const route = new Blob([JSON.stringify(tracksObject, null, 2)], {
+    const route = new Blob([JSON.stringify(tracks, null, 2)], {
       type: "application/json",
     });
     const href = await URL.createObjectURL(route);
@@ -92,6 +103,7 @@ const Timer = () => {
           Save Route
         </Button>
       </HStack>
+      {tracks.length > 0 && <MapComponent tracks={tracks} />}
     </>
   );
 };
