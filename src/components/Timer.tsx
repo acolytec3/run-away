@@ -1,7 +1,6 @@
 import React from "react";
 import { Button, HStack, Text } from "@chakra-ui/react";
 import CheapRuler from "cheap-ruler";
-import MapComponent from "./MapComponent";
 
 let ruler: CheapRuler;
 
@@ -103,7 +102,6 @@ const Timer = () => {
           Save Route
         </Button>
       </HStack>
-      {tracks.length > 0 && <MapComponent tracks={tracks} />}
     </>
   );
 };
