@@ -27,7 +27,9 @@ export const App = () => {
         reader.onload = (ev) => {
           try {
             const data = JSON.parse(ev.target!.result as string);
-            dispatch({ type: "SAVE_TRACKS", payload: data });
+            if (Array.isArray(data)) {
+              dispatch({ type: "SAVE_TRACKS", payload: data });
+            } else throw new Error("data is not JSON array");
           } catch (err) {
             toast({
               title: "Invalid route file",

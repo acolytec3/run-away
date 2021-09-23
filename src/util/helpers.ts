@@ -1,17 +1,15 @@
-export function getDistanceFromLatLonInMi(lat1: number, lon1: number, lat2: number, lon2: number) {
-    var R = 3959; // Radius of the earth in mi
-    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
-    var dLon = deg2rad(lon2 - lon1);
-    var a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2)
-        ;
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in mi
-    return d;
-}
+import { Step } from "../context/globalContext";
+import CheapRuler from "cheap-ruler"
 
-function deg2rad(deg: number) {
-    return deg * (Math.PI / 180)
+export const calcTotalDistance = (tracks: Step[]) => {
+    const ruler = new CheapRuler(tracks[0].lat, "miles");
+    const totalDistance = tracks.reduce<number>((prev, curr, index, journey) => {
+        if (index !== 0) {
+            const localDistance = ruler.distance(
+                [journey[index - 1].lat, journey[index - 1].lon],
+                [curr.lat, curr.lon]);
+            return prev + localDistance
+        } else { return 0 }
+    }, 0)
+    return totalDistance
 }

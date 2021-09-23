@@ -6,6 +6,7 @@ import Point from "ol/geom/Point";
 import locationIcon from "../location.svg";
 import "ol/ol.css";
 import globalContext, { Step } from "../context/globalContext";
+
 const MapComponent: React.FC<any> = () => {
   const { state } = React.useContext(globalContext);
   return (

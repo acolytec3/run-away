@@ -1,9 +1,7 @@
 import React from "react";
 import { Button, HStack, Text } from "@chakra-ui/react";
-import CheapRuler from "cheap-ruler";
 import GlobalContext, { Step } from "../context/globalContext";
-
-let ruler: CheapRuler;
+import { calcTotalDistance } from "../util/helpers";
 
 const Timer = () => {
   const [time, setTime] = React.useState(0);
@@ -12,7 +10,7 @@ const Timer = () => {
   const [tracks, setTracks] = React.useState<Step[]>([]);
   const [distance, setDistance] = React.useState(0);
 
-  const { dispatch } = React.useContext(GlobalContext);
+  const { state, dispatch } = React.useContext(GlobalContext);
   const start = () => {
     navigator.geolocation.getCurrentPosition((loc) => {
       setTracks([
@@ -22,7 +20,6 @@ const Timer = () => {
           timestamp: loc.timestamp,
         },
       ]);
-      ruler = new CheapRuler(loc.coords.latitude, "miles");
     });
     const trackerId = navigator.geolocation.watchPosition(
       (loc) => {
@@ -46,6 +43,7 @@ const Timer = () => {
     window.clearInterval(timer);
     navigator.geolocation.clearWatch(tracker);
     dispatch({ type: "SAVE_TRACKS", payload: tracks });
+    setDistance(calcTotalDistance(state.tracks));
   };
 
   const reset = () => {
@@ -60,15 +58,6 @@ const Timer = () => {
     const journey = tracks;
     journey.push(loc);
     setTracks(journey);
-    const step = journey.length - 1;
-    if (step > 0) {
-      const localDistance = ruler.distance(
-        [journey[step - 1].lat, journey[step - 1].lon],
-        [journey[step].lat, journey[step].lon]
-      );
-      const totalDistance = distance + localDistance;
-      setDistance(totalDistance);
-    }
   };
 
   const downloadRoute = async () => {
